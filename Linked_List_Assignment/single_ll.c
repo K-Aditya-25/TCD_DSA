@@ -1,2 +1,6 @@
 #include <stdio.h>
-//Hi there
+typedef struct node
+{
+    char c;
+    struct node* next;
+} Node;
