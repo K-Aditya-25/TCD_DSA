@@ -33,6 +33,31 @@ void print_list(Node* list)
     }
     printf("\n");
 }
+
+void remove_node(Node** list, char data)
+{
+    //iterative
+    Node* prev = *list;
+    Node* temp = prev->next;
+    while(temp != NULL)
+    {
+        if (prev->c == data)
+        {
+            free(prev);
+            *list = temp;
+            break;
+        }
+        if (temp->c == data)
+        {
+            prev->next = temp->next;
+            free(temp);
+            break;
+        }
+        prev = temp;
+        temp = temp->next;
+    }
+    //recursive: to do
+}
 int main(void)
 {
     Node* head = NULL;
@@ -42,5 +67,11 @@ int main(void)
     add_node(&head, 'I');
     add_node(&head, 'D');
     add_node(&head, 'A');
+    print_list(head);
+    remove_node(&head, 'I');
+    print_list(head);
+    remove_node(&head, 'A');
+    print_list(head);
+    remove_node(&head, 'A');
     print_list(head);
 }
