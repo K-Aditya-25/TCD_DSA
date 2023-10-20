@@ -3,7 +3,7 @@
 #include <string.h>
 
 //global variables
-#define MAX_STRING_SIZE 40
+#define MAX_STRING_SIZE 100
 #define MAX_ARRAY_SIZE 18625
 
 //define Element struct
@@ -21,9 +21,14 @@ int partition_element(Element arr[], int low, int high);
 void quickSort_element(Element arr[], int p, int r);
 
 //driver code
-int main()
+int main(void)
 {
-    FILE* f = fopen("t4_ign.csv", "r");
+    FILE* f = fopen("/Users/adityakharbanda/Desktop/TCD_DSA/Assignment2/t4_ign.csv", "r");
+    
+//    char c = fgetc(f);
+//    printf("%c\n", c);
+//    return 0;
+    
     char buffer[MAX_STRING_SIZE] = {'\0'};
     Element reviews[MAX_ARRAY_SIZE];
     //ignore the first line
@@ -56,7 +61,7 @@ int main()
     //print the names and scores of top 10 games
     for (int i = MAX_ARRAY_SIZE - 1; i >= MAX_ARRAY_SIZE - 10; i--)
     {
-        printf("%i %s: %i\n", i+1, reviews[0].title, reviews[0].score);
+        printf("%i %s: %i\n", MAX_ARRAY_SIZE - i, reviews[i].title, reviews[i].score);
     }
 
 
@@ -94,7 +99,7 @@ int partition_element(Element arr[], int low, int high)
   {
     do{
       i++;
-    }while (arr[i].score < pivot);
+    }while (arr[i].score <= pivot);
     do{
       j--;
     }while(arr[j].score > pivot);
@@ -104,8 +109,8 @@ int partition_element(Element arr[], int low, int high)
   swap_element(&arr[j], &arr[low]);
   return j;
 }
-void quickSort_element(Element arr[], int p, int r) 
-{ 
+void quickSort_element(Element arr[], int p, int r)
+{
  //TODO
  if (p < r)
  {
@@ -154,3 +159,4 @@ int next_field(FILE *csv, char *buffer, int max_len)
         c = fgetc(csv);
     }
 }
+
