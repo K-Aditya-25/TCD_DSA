@@ -4,7 +4,7 @@
 
 //global variables
 #define MAX_STRING_SIZE 40
-#define MAX_ARRAY_SIZE 18626
+#define MAX_ARRAY_SIZE 18625
 
 //define Element struct
 typedef struct Element{
@@ -39,10 +39,10 @@ int main()
         strcpy(reviews[i].title, "");
         strcpy(reviews[i].platform, "");
         ans = next_field(f, buffer, MAX_STRING_SIZE);
-        strncpy(reviews[i].title, buffer, MAX_STRING_SIZE);
+        strcpy(reviews[i].title, buffer);
 
         ans = next_field(f, buffer, MAX_STRING_SIZE);
-        strncpy(reviews[i].platform, buffer, MAX_STRING_SIZE);
+        strcpy(reviews[i].platform, buffer);
 
         ans = next_field(f, buffer, MAX_STRING_SIZE);
         reviews[i].score = atoi(buffer);
@@ -52,9 +52,9 @@ int main()
         i++;
     }
     fclose(f);
-    quickSort_element(reviews, 0, 18625);
+    quickSort_element(reviews, 0, 18624);
     //print the names and scores of top 10 games
-    for (int i = 0; i < 10; i++)
+    for (int i = MAX_ARRAY_SIZE - 1; i >= MAX_ARRAY_SIZE - 10; i--)
     {
         printf("%i %s: %i\n", i+1, reviews[0].title, reviews[0].score);
     }
