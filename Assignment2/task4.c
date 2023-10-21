@@ -21,9 +21,9 @@ int partition_element(Element arr[], int low, int high);
 void quickSort_element(Element arr[], int p, int r);
 
 //driver code
-int main(void)
+int main(int argc, char* argv[])
 {
-    FILE* f = fopen("/Users/adityakharbanda/Desktop/TCD_DSA/Assignment2/t4_ign.csv", "r");
+    FILE* f = fopen(argv[1], "r");
     
 //    char c = fgetc(f);
 //    printf("%c\n", c);
