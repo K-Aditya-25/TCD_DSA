@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     //print the names and scores of top 10 games
     for (int i = MAX_ARRAY_SIZE - 1; i >= MAX_ARRAY_SIZE - 10; i--)
     {
-        printf("%i %s: %i\n", MAX_ARRAY_SIZE - i, reviews[i].title, reviews[i].score);
+        printf("%i %s, %s : %i, %i\n", MAX_ARRAY_SIZE - i, reviews[i].title, reviews[i].platform, reviews[i].score, reviews[i].year);
     }
 
 
