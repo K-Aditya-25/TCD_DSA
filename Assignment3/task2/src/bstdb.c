@@ -1,9 +1,8 @@
 #include "bstdb.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-
+#include <stdio.h>
 // Write your submission in this file
 //
 // A main function and some profiling tools have already been set up to test
@@ -38,43 +37,45 @@
 // Otherwise the profiler will not be able to find them. If you think you
 // need more functionality than what is provided by these 6 functions, you
 // may write additional functions in this file.
-
-typedef struct TreeNode
-{
-    int doc_id;
-    char* name;
-    int word_count;
-    char* author;
-    struct TreeNode* left;
-    struct TreeNode* right;
-    struct TreeNode* parent;
-}TreeNode;
-
-TreeNode* root = NULL;
+typedef struct Node{
+	int doc_id;
+	int word_count;
+	char* name;
+	char* author;
+	struct Node* left;
+	struct Node* right;
+	struct Node* parent;
+}Node;
+Node* root;
 int
 bstdb_init ( void ) {
 	// This function will run once (and only once) when the database first
 	// starts. Use it to allocate any memory you want to use or initialize 
 	// some globals if you need to. Function should return 1 if initialization
 	// was successful and 0 if something went wrong.
+	root = NULL;
 	return 1;
 }
-
-TreeNode* insert(TreeNode** root, char *name, int word_count, char *author)
+Node* initialise(void)
 {
-    TreeNode* new = (TreeNode*)malloc(sizeof(TreeNode));
-    new->word_count = word_count;
-    new->name = (char*)malloc(sizeof(char) * 30);
-    new->author = (char*)malloc(sizeof(char) * 30);
-    new->left = NULL;
-    new->right = NULL;
-    strcpy(new->name, name);
-    strcpy(new->author, author);
-    srand(time(NULL) + word_count);
-    new->doc_id = rand() % RAND_MAX;
-    
-    TreeNode* x = (*root);
-    TreeNode* y = NULL;
+	Node* new = (Node*)malloc(sizeof(Node));
+	if (!new){return NULL;}
+	new->word_count = 0;
+	new->doc_id = 0;
+	new->author = NULL;
+	new->name = NULL;
+	new->author = (char*)malloc(sizeof(char) * 65);
+	new->name = (char*)malloc(sizeof(char) * 65);
+	new->left = NULL;
+	new->right = NULL;
+	new->parent = NULL;
+	return new;
+}
+
+void insert(Node** root, Node* new)
+{
+	Node* x = (*root);
+    Node* y = NULL;
     while (x != NULL)
     {
         y = x;
@@ -82,17 +83,17 @@ TreeNode* insert(TreeNode** root, char *name, int word_count, char *author)
         else {x = x->right;}
     }
     new->parent = y;
-    
-    if (y == NULL){(*root) = new;}
+
+    //Find the correct position of z relative to y (its parent)
+    if (y == NULL){(*root) = new;} //Tree was NULL
     else
     {
         if (new->doc_id < y->doc_id){y->left = new;}
-        else{y->right = new;}
+        else {y->right = new;}
     }
-    return new;
 }
 int
-bstdb_add ( char *name, int word_count, char *author ) {
+bstdb_add (char *name, int word_count, char *author) {
 	// This function should create a new node in the binary search tree, 
 	// populate it with the name, word_count and author of the arguments and store
 	// the result in the tree.
@@ -107,18 +108,30 @@ bstdb_add ( char *name, int word_count, char *author ) {
 	//
 	// If something goes wrong and the data cannot be stored, this function
 	// should return -1. Otherwise it should return the ID of the new node
-    TreeNode* new = insert(&root, name, word_count, author);
-    return new->doc_id;
-	return -1;
+	Node* new = initialise();
+	if (!new){return -1;}
+	new->name = name;
+	new->author = author;
+	srand(time(NULL) +word_count);
+	new->doc_id = rand() % RAND_MAX;
+	new->word_count = word_count;
+	insert(&root, new);
+	return new->doc_id;
 }
-TreeNode* search(TreeNode* root, int doc_id)
+Node* search(Node* root, int k)
 {
-    if (root == NULL || root->doc_id == doc_id)
-    {
-        return root;
-    }
-    if (doc_id < root->doc_id){return search(root->left, doc_id);}
-    else{return search(root->right, doc_id);}
+	if (root == NULL || root->doc_id == k)
+	{
+		return root;
+	}
+	if (k < root->doc_id)
+	{
+		return search(root->left, k);
+	}
+	else
+	{
+		return search(root->right, k);
+	}
 }
 int
 bstdb_get_word_count ( int doc_id ) {
@@ -126,8 +139,8 @@ bstdb_get_word_count ( int doc_id ) {
 	// and return the word_count of the node with the corresponding doc_id.
 	//
 	// If the required node is not found, this function should return -1
-    TreeNode* ans = search(root, doc_id);
-    if (ans){return ans->word_count;}
+	Node* ans = search(root, doc_id);
+	if (ans){return ans->word_count;}
 	return -1;
 }
 
@@ -137,9 +150,9 @@ bstdb_get_name ( int doc_id ) {
 	// and return the name of the node with the corresponding doc_id.
 	//
 	// If the required node is not found, this function should return NULL or 0
-    TreeNode* ans = search(root, doc_id);
-    if (ans){return ans->name;}
-	return 0;
+	Node* ans = search(root, doc_id);
+	if(ans){return ans->name;}
+	return NULL;
 }
 
 void
@@ -163,23 +176,24 @@ bstdb_stat ( void ) {
 	//  + Can you prove that there are no accidental duplicate document IDs
 	//    in the tree?
 }
-void delete(TreeNode* root)
+void delete(Node* root)
 {
-    if (root == NULL)
-    {
-        return;
-    }
-    free(root->left);
-    free(root->right);
-    
-    free(root->name);
-    free(root->author);
-    free(root);
+	if (root == NULL)
+	{
+		return;
+	}
+
+	delete(root->left);
+	delete(root->right);
+	
+	// free(root->name);
+	// free(root->author);
+	free(root);
 }
 void
 bstdb_quit ( void ) {
 	// This function will run once (and only once) when the program ends. Use
 	// it to free any memory you allocated in the course of operating the
 	// database.
-    delete(root);
+	delete(root);
 }
