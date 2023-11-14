@@ -1,199 +1,258 @@
 #include "bstdb.h"
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
 #include <stdio.h>
-// Write your submission in this file
-//
-// A main function and some profiling tools have already been set up to test
-// your code in the task2.c file. All you need to do is fill out this file
-// with an appropriate Binary Search Tree implementation.
-//
-// The input data will be books. A book is comprised of a title and a word
-// count. You should store both these values in the tree along with a unique
-// integer ID which you will generate.
-//
-// We are aiming for speed here. A BST based database should be orders of
-// magnitude faster than a linked list implementation if the BST is written
-// correctly.
-//
-// We have provided an example implementation of what a linked list based
-// solution to this problem might look like in the db/listdb.c file. If you
-// are struggling to understand the problem or what one of the functions
-// below ought to do, consider looking at that file to see if it helps your
-// understanding.
-//
-// There are 6 functions you need to look at. Each is provided with a comment
-// which explains how it should behave. The functions are:
-//
-//  + bstdb_init
-//  + bstdb_add
-//  + bstdb_get_word_count
-//  + bstdb_get_name
-//  + bstdb_stat
-//  + bstdb_quit
-//
-// Do not rename these functions or change their arguments/return types.
-// Otherwise the profiler will not be able to find them. If you think you
-// need more functionality than what is provided by these 6 functions, you
-// may write additional functions in this file.
-typedef struct Node{
-	int doc_id;
-	int word_count;
-	char* name;
-	char* author;
-	struct Node* left;
-	struct Node* right;
-	struct Node* parent;
-}Node;
-Node* root;
-int
-bstdb_init ( void ) {
-	// This function will run once (and only once) when the database first
-	// starts. Use it to allocate any memory you want to use or initialize 
-	// some globals if you need to. Function should return 1 if initialization
-	// was successful and 0 if something went wrong.
-	root = NULL;
-	return 1;
-}
-Node* initialise(void)
-{
-	Node* new = (Node*)malloc(sizeof(Node));
-	if (!new){return NULL;}
-	new->word_count = 0;
-	new->doc_id = 0;
-	new->author = NULL;
-	new->name = NULL;
-	new->author = (char*)malloc(sizeof(char) * 65);
-	new->name = (char*)malloc(sizeof(char) * 65);
-	new->left = NULL;
-	new->right = NULL;
-	new->parent = NULL;
-	return new;
-}
+#include <stdlib.h>
+#include <string.h>
 
-void insert(Node** root, Node* new)
-{
-	Node* x = (*root);
-    Node* y = NULL;
-    while (x != NULL)
-    {
-        y = x;
-        if (new->doc_id < y->doc_id){x = x->left;}
-        else {x = x->right;}
+//struct definition
+struct bstnode {
+    int   doc_id;           // unique identifier for the document
+    char *name;           // file name of the document    
+	char* author;         //author of the document
+    int word_count;       // number of words in the document
+	int height;      
+    struct bstnode *left;
+	struct bstnode *right; // pointer to the next node in the list
+};
+
+//global variables
+int g_next_id;     // ID of the next document to be added
+struct bstnode *root; // database storage
+
+float g_num_comps;
+float g_num_searches;
+int num_insert;
+int count_nodes;
+
+//----------------------------------Custom Functions-----------------------------------
+struct bstnode* tree_search(struct bstnode* root,int doc_id){
+
+    if(root->doc_id==doc_id || root==NULL){
+    return root;
+	g_num_comps++;
     }
-    new->parent = y;
-
-    //Find the correct position of z relative to y (its parent)
-    if (y == NULL){(*root) = new;} //Tree was NULL
+  
+    if(root->doc_id < doc_id)
+	{g_num_comps++;
+    return tree_search(root->right,doc_id);}
+	
+    
     else
-    {
-        if (new->doc_id < y->doc_id){y->left = new;}
-        else {y->right = new;}
-    }
+	{g_num_comps++;
+    return tree_search(root->left,doc_id);}
+	
 }
-int
-bstdb_add (char *name, int word_count, char *author) {
-	// This function should create a new node in the binary search tree, 
-	// populate it with the name, word_count and author of the arguments and store
-	// the result in the tree.
-	//
-	// This function should also generate and return an identifier that is
-	// unique to this document. A user can find the stored data by passing
-	// this ID to one of the two search functions below.
-	//
-	// How you generate this ID is up to you, but it must be an integer. Note
-	// that this ID should also form the keys of the nodes in your BST, so
-	// try to generate them in a way that will result in a balanced tree.
-	//
-	// If something goes wrong and the data cannot be stored, this function
-	// should return -1. Otherwise it should return the ID of the new node
-	Node* new = initialise();
-	if (!new){return -1;}
-	new->name = name;
-	new->author = author;
-	srand(time(NULL) +word_count);
-	new->doc_id = rand() % RAND_MAX;
-	new->word_count = word_count;
-	insert(&root, new);
-	return new->doc_id;
-}
-Node* search(Node* root, int k)
+int height(struct bstnode *N)
 {
-	if (root == NULL || root->doc_id == k)
-	{
-		return root;
-	}
-	if (k < root->doc_id)
-	{
-		return search(root->left, k);
-	}
+	if (N == NULL)
+		return 0;
+	return N->height;
+}
+
+int max(int a, int b)
+{
+	return (a > b)? a : b;
+}
+
+struct bstnode *rightRotate(struct bstnode *y)
+{
+    struct bstnode *x = y->left;
+    struct bstnode *T2 = x->right;
+ 
+    x->right = y;
+    y->left = T2;
+ 
+    y->height = max(height(y->left), height(y->right))+1;
+    x->height = max(height(x->left), height(x->right))+1;
+     return x;
+}
+struct bstnode *leftRotate(struct bstnode *x)
+{
+    struct bstnode *y = x->right;
+    struct bstnode *T2 = y->left;
+     y->left = x;
+    x->right = T2;
+     x->height = max(height(x->left), height(x->right))+1;
+    y->height = max(height(y->left), height(y->right))+1;
+     return y;
+}
+
+
+int getBalance(struct bstnode *N)
+{
+	if (N == NULL)
+		return 0;
+	return height(N->left) - height(N->right);
+}
+
+struct bstnode* createbst(int doc_id, char *name, char* author, int word_count, struct bstnode *root){
+	
+	count_nodes++;
+	/* If the tree is empty, return a new node */
+	if (root == NULL)
+		{
+			struct bstnode* newnode=(struct bstnode*)malloc(sizeof(struct bstnode));
+		newnode->doc_id=doc_id;
+		newnode->name=name;
+		newnode->author = author;
+		newnode->word_count=word_count;
+		newnode->height=1;
+        newnode->left=NULL;
+        newnode->right=NULL;
+		return newnode;
+		}
+
+
+
+	/* Otherwise, recur down the tree */
 	else
 	{
-		return search(root->right, k);
+	if (doc_id < root->doc_id)
+	{
+		root->left=createbst (doc_id, name , author, word_count,root->left);	
 	}
+	else if(doc_id > root->doc_id)
+		{
+			
+		root->right=createbst(doc_id, name, author, word_count,root->right);	
+		}
+
+     else return root;
+	}
+
+    root->height = 1 + max(height(root->left),height(root->right)); 
+    int balance = getBalance(root);
+ 
+    // Left Left Case
+    if (balance > 1 && doc_id < root->left->doc_id)
+        return rightRotate(root);
+     // Right Right Case
+    if (balance < -1 && doc_id > root->right->doc_id)
+        return leftRotate(root);
+     // Left Right Case
+    if (balance > 1 && doc_id > root->left->doc_id)
+    {
+        root->left =  leftRotate(root->left);
+        return rightRotate(root);
+    }
+     // Right Left Case
+    if (balance < -1 && doc_id < root->right->doc_id)
+    {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+    return root;
 }
-int
-bstdb_get_word_count ( int doc_id ) {
-	// This is a search function. It should traverse the binary search tree
-	// and return the word_count of the node with the corresponding doc_id.
-	//
-	// If the required node is not found, this function should return -1
-	Node* ans = search(root, doc_id);
-	if (ans){return ans->word_count;}
-	return -1;
+int isBalanced(struct bstnode* root)
+{
+    /* for height of left subtree */
+    int lh;
+ 
+    /* for height of right subtree */
+    int rh;
+ 
+    /* If tree is empty then return true */
+    if (root == NULL)
+        return 1;
+ 
+    /* Get the height of left and right sub trees */
+    lh = height(root->left);
+    rh = height(root->right);
+ 
+    if (abs(lh - rh) <= 1 && isBalanced(root->left)
+        && isBalanced(root->right))
+        return 1;
+ 
+    /* If we reach here then tree is not height-balanced */
+    return 0;
 }
 
-char*
-bstdb_get_name ( int doc_id ) {
-	// This is a search function. It should traverse the binary search tree
-	// and return the name of the node with the corresponding doc_id.
-	//
-	// If the required node is not found, this function should return NULL or 0
-	Node* ans = search(root, doc_id);
-	if(ans){return ans->name;}
-	return NULL;
+int totalNodes(struct bstnode* root)
+{
+    if (root == NULL)
+        return 0;
+ 
+    int l = totalNodes(root->left);
+    int r = totalNodes(root->right);
+ 
+    return 1 + l + r;
+}
+void tree_delete(struct bstnode *root){
+    if (root == NULL) return;
+    tree_delete(root->left);
+    tree_delete(root->right);
+    free(root);
+}
+
+//-------------------------------------Program Functions------------------------------
+int bstdb_init ( void ) {
+	root =NULL;
+    g_next_id = 0;
+    g_num_comps = 0;
+    g_num_searches = 0;
+	num_insert=0;
+	return 1;
+}
+
+
+int bstdb_add (char *name, int word_count, char* author) {
+	num_insert++;
+	struct bstnode *newnode;
+	newnode=createbst(g_next_id, name, author, word_count, root);
+	if(!newnode){return -1;}
+	root=newnode;
+	return g_next_id++;
+}
+
+
+int bstdb_get_word_count ( int doc_id ) {
+	struct bstnode *ans; 
+	g_num_searches++;
+    ans = tree_search(root,doc_id);
+	if(ans==NULL)
+	return -1;
+
+	else
+	return ans->word_count;
+}
+
+char* bstdb_get_name ( int doc_id )
+{
+	struct bstnode *ans; 
+	g_num_searches++;
+    ans = tree_search(root,doc_id);
+	if(ans==NULL)
+	return "-1";
+
+	else
+	return ans->name;
 }
 
 void
 bstdb_stat ( void ) {
-	// Use this function to show off! It will be called once after the 
-	// profiler ends. The profiler checks for execution time and simple errors,
-	// but you should use this function to demonstrate your own innovation.
-	//
-	// Suggestions for things you might want to demonstrate are given below,
-	// but in general what you choose to show here is up to you. This function
-	// counts for marks so make sure it does something interesting or useful.
-	//
-	//  + Check if your tree is balanced and print the result
-	//
-	//  + Does the number of nodes in the tree match the number you expect
-	//    based on the number of insertions you performed?
-	//
-	//  + How many nodes on average did you need to traverse in order to find
-	//    a search result? 
-	//
-	//  + Can you prove that there are no accidental duplicate document IDs
-	//    in the tree?
-}
-void delete(Node* root)
-{
-	if (root == NULL)
-	{
-		return;
-	}
 
-	delete(root->left);
-	delete(root->right);
+	int a=isBalanced(root);
+	if(a==1)
+	printf("Tree is balanced\n");
+	else
+	printf("Tree is not balanced\n"); 
+
 	
-	// free(root->name);
-	// free(root->author);
-	free(root);
+	//check total number of nodes = total nodes in BST
+    int n=totalNodes(root);
+	if(n==num_insert)
+	printf("Tree size matches expected? Yes\n");
+
+	else
+	printf("Tree size matches expected? No\n");
+
+	//print average comparisons per search
+    printf("Average comparisons per search = %f\n",(g_num_comps/g_num_searches));
+	
+	//print height of tree
+	int h=height(root);
+	printf("Height of the tree = %d\n",h);
 }
-void
-bstdb_quit ( void ) {
-	// This function will run once (and only once) when the program ends. Use
-	// it to free any memory you allocated in the course of operating the
-	// database.
-	delete(root);
+
+void bstdb_quit ( void ) {
+tree_delete(root);
 }
