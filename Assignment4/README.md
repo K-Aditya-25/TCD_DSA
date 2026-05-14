@@ -10,7 +10,7 @@ This repository contains the C implementations for CS3D5A Assignment 4 at Trinit
 | `t1_test.c` | Test driver for Task 1. |
 | `t2.h`, `t2.c` | Undirected weighted graph using an adjacency matrix, with Dijkstra's shortest path algorithm. |
 | `t2_test.c` | Test driver for Task 2. |
-| `t3.c` | Dublin Bus graph loader and shortest-path implementation. |
+| `t3.h`, `t3.c` | Dublin Bus graph loader and shortest-path implementation. |
 | `t3_test.c` | Interactive test driver for Task 3. |
 | `vertices.csv` | Dublin Bus stop data: stop ID, name, latitude, and longitude. |
 | `edges.csv` | Bus stop connections and edge weights in metres. |
